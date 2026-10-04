@@ -7,6 +7,7 @@ generator and membership tracking from Aceestver-3.1.2/3.2.4.
 """
 
 import calendar
+import os  # INTENTIONAL lint error (F401) for the quality-gate demo
 import copy
 import random
 from datetime import date, datetime
