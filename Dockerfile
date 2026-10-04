@@ -34,8 +34,8 @@ LABEL org.opencontainers.image.title="aceest-fitness" \
       org.opencontainers.image.description="ACEest Fitness & Gym Flask application"
 
 # Unprivileged user; /data holds the SQLite database (mount a volume to persist it).
-RUN groupadd --system --gid 10001 aceest \
- && useradd --system --uid 10001 --gid aceest --no-create-home --shell /usr/sbin/nologin aceest \
+RUN groupadd --gid 10001 aceest \
+ && useradd --uid 10001 --gid aceest --no-create-home --shell /usr/sbin/nologin aceest \
  && mkdir /data \
  && chown aceest:aceest /data
 
