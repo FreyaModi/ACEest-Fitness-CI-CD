@@ -3,9 +3,22 @@
 from app import __version__, create_app
 
 
-def test_create_app_applies_test_config():
-    app = create_app({"TESTING": True})
+def test_create_app_applies_test_config(tmp_path):
+    db_path = tmp_path / "nested" / "config.db"
+    app = create_app({"TESTING": True, "DATABASE": str(db_path)})
     assert app.testing
+    assert db_path.exists()  # schema is created on start-up
+
+
+def test_database_path_from_environment(monkeypatch, tmp_path):
+    db_path = tmp_path / "env.db"
+    monkeypatch.setenv("ACEEST_DATABASE", str(db_path))
+    assert create_app().config["DATABASE"] == str(db_path)
+
+
+def test_init_db_command(app):
+    result = app.test_cli_runner().invoke(args=["init-db"])
+    assert "Initialised the database." in result.output
 
 
 def test_health(client):
@@ -22,6 +35,16 @@ def test_index_renders_programs(client):
     assert "ACEest FUNCTIONAL FITNESS" in html
     for name in ("Fat Loss (FL)", "Muscle Gain (MG)", "Beginner (BG)"):
         assert name in html
+
+
+def test_index_lists_clients(client, make_client):
+    make_client("Priya", program="MG")
+    html = client.get("/").get_data(as_text=True)
+    assert "Priya" in html and "No clients yet" not in html
+
+
+def test_index_without_clients(client):
+    assert "No clients yet" in client.get("/").get_data(as_text=True)
 
 
 def test_unknown_route_returns_json_404(client):

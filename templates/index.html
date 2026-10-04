@@ -46,6 +46,23 @@
       {% endfor %}
     </div>
 
+    <h2>Clients</h2>
+    {% if clients %}
+    <table>
+      <thead><tr><th>Name</th><th>Age</th><th>Weight (kg)</th><th>Program</th><th>Calories</th><th>Membership</th></tr></thead>
+      <tbody>
+        {% for c in clients %}
+        <tr>
+          <td>{{ c.name }}</td><td>{{ c.age or '-' }}</td><td>{{ c.weight or '-' }}</td>
+          <td>{{ c.program or '-' }}</td><td>{{ c.calories or '-' }}</td><td>{{ c.membership_status }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No clients yet. Add one with <code>POST /api/clients</code>.</p>
+    {% endif %}
+
     <h2>API Endpoints</h2>
     <table>
       <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
@@ -54,6 +71,10 @@
         <tr><td>GET</td><td><code>/api/programs</code></td><td>List training programs</td></tr>
         <tr><td>GET</td><td><code>/api/programs/&lt;code&gt;</code></td><td>Program details (FL, MG, BG)</td></tr>
         <tr><td>POST</td><td><code>/api/calories</code></td><td>Estimate daily calories</td></tr>
+        <tr><td>GET / POST</td><td><code>/api/clients</code></td><td>List or create clients</td></tr>
+        <tr><td>GET / PATCH / DELETE</td><td><code>/api/clients/&lt;name&gt;</code></td><td>Read, update or delete a client</td></tr>
+        <tr><td>GET / POST</td><td><code>/api/clients/&lt;name&gt;/progress</code></td><td>Weekly adherence log</td></tr>
+        <tr><td>GET</td><td><code>/api/export/clients.csv</code></td><td>Export clients as CSV</td></tr>
       </tbody>
     </table>
   </main>
