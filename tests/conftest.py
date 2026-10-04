@@ -12,10 +12,21 @@ from app import create_app  # noqa: E402
 
 
 @pytest.fixture
-def app():
-    return create_app({"TESTING": True})
+def app(tmp_path):
+    """A fresh application backed by an isolated, temporary database."""
+    return create_app({"TESTING": True, "DATABASE": str(tmp_path / "test.db")})
 
 
 @pytest.fixture
 def client(app):
     return app.test_client()
+
+
+@pytest.fixture
+def make_client(client):
+    """Create a client through the API and return its JSON representation."""
+    def _make_client(name="Arjun", **fields):
+        response = client.post("/api/clients", json={"name": name, **fields})
+        assert response.status_code == 201, response.get_json()
+        return response.get_json()
+    return _make_client

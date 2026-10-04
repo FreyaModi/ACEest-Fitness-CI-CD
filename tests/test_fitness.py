@@ -1,5 +1,7 @@
 """Unit tests for the core fitness domain logic."""
 
+from datetime import date
+
 import pytest
 
 import fitness
@@ -55,3 +57,17 @@ class TestCalories:
     def test_calories_unknown_program(self):
         with pytest.raises(ValidationError):
             fitness.calculate_calories(70, "ZZ")
+
+
+class TestProgressHelpers:
+    def test_current_week_label_format(self):
+        assert fitness.current_week_label(date(2026, 3, 4)) == "Week 09 - 2026"
+
+    def test_current_week_label_defaults_to_today(self):
+        assert fitness.current_week_label().endswith(str(date.today().year))
+
+    def test_summarize_adherence(self):
+        assert fitness.summarize_adherence([80, 90, 75]) == (3, 81.7)
+
+    def test_summarize_adherence_empty(self):
+        assert fitness.summarize_adherence([]) == (0, 0.0)
