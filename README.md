@@ -452,6 +452,7 @@ Screenshots from the **BITS university lab VM** (Jenkins) and from **GitHub**
 | 13 | [PR #2 commit checks](docs/screenshots/13-github-pr2-commit-checks-fail-then-pass.jpg) | ❌ on each intentional failure, ✅ after each fix |
 | 14 | [Repository](docs/screenshots/14-github-repository-home.jpg) | Branches, tags and Conventional Commit history |
 | 15 | [README](docs/screenshots/15-github-readme-ci-badge.jpg) | Passing CI badge |
+| 16 | [Pytest inside the container](docs/screenshots/16-github-actions-pytest-inside-container-208-passed.jpg) | Automated Testing job log: 208 passed, 100 % coverage, run in the Docker test image |
 
 ![Quality gate demo on the university VM Jenkins](docs/screenshots/03-vm-jenkins-quality-gate-demo-stage-view.jpg)
 
