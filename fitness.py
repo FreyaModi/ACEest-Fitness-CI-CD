@@ -19,7 +19,7 @@ PROGRAMS = {
     "FL": {
         "code": "FL",
         "name": "Fat Loss (FL)",
-        "calorie_factor": 20,  # INTENTIONAL bug for the quality-gate demo (should be 22)
+        "calorie_factor": 22,
         "focus": "Conditioning",
         "color": "#e74c3c",
         "description": "Conditioning-led programme to drive fat loss.",
