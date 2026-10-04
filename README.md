@@ -27,8 +27,9 @@ as a modular web service and ships it through a full DevOps workflow:
 8. [Jenkins BUILD Server](#jenkins-build-server)
 9. [GitHub Actions Pipeline](#github-actions-pipeline)
 10. [Quality Gate Demonstration](#quality-gate-demonstration)
-11. [Version Control Strategy](#version-control-strategy)
-12. [Troubleshooting](#troubleshooting)
+11. [Pipeline Evidence (Screenshots)](#pipeline-evidence-screenshots)
+12. [Version Control Strategy](#version-control-strategy)
+13. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -418,6 +419,43 @@ and [pull request #2](https://github.com/FreyaModi/ACEest-Fitness-CI-CD/pull/2).
 job is **ACEest Fitness - Quality Gate Demo (VM)**, and the results match the table above:
 Lint ❌ → Unit Tests ❌ → Docker Build ❌ → ✅ → ✅. Build #1 of that job failed at checkout
 because the job was created before the branch had been pushed, so the demo starts at build #2.
+
+---
+
+## Pipeline Evidence (Screenshots)
+
+Screenshots from the **BITS university lab VM** (Jenkins) and from **GitHub**
+(Actions, pull requests), taken after the runs described above. The full set is in
+[`docs/screenshots/`](docs/screenshots/).
+
+**Jenkins on the university lab VM**
+
+| # | Screenshot | Shows |
+|---|------------|-------|
+| 01 | [Dashboard](docs/screenshots/01-vm-jenkins-dashboard-both-jobs.jpg) | Both pipeline jobs, last success and failure |
+| 02 | [Main job Stage View](docs/screenshots/02-vm-jenkins-main-job-stage-view.jpg) | `aceest-fitness-build`: #1 failed at Docker Build (no Docker access yet), #2 and #3 green |
+| 03 | [Quality gate demo Stage View](docs/screenshots/03-vm-jenkins-quality-gate-demo-stage-view.jpg) | Lint ❌ → Unit Tests ❌ → Docker Build ❌ → ✅ → ✅ |
+| 04 | [Build #3 console (start)](docs/screenshots/04-vm-jenkins-main-build3-console-start-scm-trigger.jpg) | "Started by an SCM change", checkout from GitHub |
+| 05 | [Build #3 console (end)](docs/screenshots/05-vm-jenkins-main-build3-console-end-success.jpg) | `BUILD SUCCESSFUL`, `Finished: SUCCESS` |
+| 06 | [Test results](docs/screenshots/06-vm-jenkins-main-build3-test-results-208-passed.jpg) | All 208 tests passing (JUnit report) |
+| 07 | [Job config: triggers](docs/screenshots/07-vm-jenkins-job-config-poll-scm.jpg) | Poll SCM `H/2 * * * *` |
+| 08 | [Job config: repository](docs/screenshots/08-vm-jenkins-job-config-github-repo.jpg) | Pipeline script from SCM → this GitHub repository |
+| 09 | [Job config: branch and script](docs/screenshots/09-vm-jenkins-job-config-branch-and-jenkinsfile.jpg) | Branch `*/main`, script path `Jenkinsfile` |
+| 10 | [VM terminal](docs/screenshots/10-vm-terminal-lint-tests-docker-images.jpg) | Rocky Linux 9.5, Python 3.12, Docker; flake8 clean, 208 tests, 100 % coverage, built images |
+
+**GitHub**
+
+| # | Screenshot | Shows |
+|---|------------|-------|
+| 11 | [Actions runs](docs/screenshots/11-github-actions-workflow-runs.jpg) | Workflow runs on every push and pull request |
+| 12 | [Main run](docs/screenshots/12-github-actions-main-run-three-jobs.jpg) | Build & Lint → Docker Image Assembly → Automated Testing, all green |
+| 13 | [PR #2 commit checks](docs/screenshots/13-github-pr2-commit-checks-fail-then-pass.jpg) | ❌ on each intentional failure, ✅ after each fix |
+| 14 | [Repository](docs/screenshots/14-github-repository-home.jpg) | Branches, tags and Conventional Commit history |
+| 15 | [README](docs/screenshots/15-github-readme-ci-badge.jpg) | Passing CI badge |
+
+![Quality gate demo on the university VM Jenkins](docs/screenshots/03-vm-jenkins-quality-gate-demo-stage-view.jpg)
+
+![GitHub Actions main run](docs/screenshots/12-github-actions-main-run-three-jobs.jpg)
 
 ---
 
