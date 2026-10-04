@@ -78,6 +78,10 @@
         <tr><td>GET / POST</td><td><code>/api/clients/&lt;name&gt;/metrics</code></td><td>Body metrics (weight, waist, body fat)</td></tr>
         <tr><td>GET</td><td><code>/api/clients/&lt;name&gt;/summary</code></td><td>Profile, goals, progress and BMI</td></tr>
         <tr><td>GET</td><td><code>/api/clients/&lt;name&gt;/bmi</code></td><td>Client BMI and risk category</td></tr>
+        <tr><td>POST</td><td><code>/api/clients/&lt;name&gt;/generate-program</code></td><td>Generate a weekly plan for the client</td></tr>
+        <tr><td>GET</td><td><code>/api/clients/&lt;name&gt;/membership</code></td><td>Membership status and renewal check</td></tr>
+        <tr><td>POST</td><td><code>/api/clients/&lt;name&gt;/membership/renew</code></td><td>Renew membership by N months</td></tr>
+        <tr><td>POST</td><td><code>/api/programs/generate</code></td><td>Generate a weekly plan (no client needed)</td></tr>
         <tr><td>POST</td><td><code>/api/bmi</code></td><td>Calculate BMI from height and weight</td></tr>
         <tr><td>GET</td><td><code>/api/export/clients.csv</code></td><td>Export clients as CSV</td></tr>
       </tbody>
