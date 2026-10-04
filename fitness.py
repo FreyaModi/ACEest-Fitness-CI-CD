@@ -1,13 +1,16 @@
 """Core fitness domain logic for ACEest, independent of Flask.
 
 Program data and calorie factors come from the ACEest desktop versions
-(Aceestver-1.0 to Aceestver-1.1); progress tracking from Aceestver-2.x.
+(Aceestver-1.0 to Aceestver-1.1); progress tracking from Aceestver-2.x;
+workouts, body metrics and BMI from Aceestver-2.2.4/3.0.1.
 """
 
 import copy
 from datetime import date
 
 from validators import ValidationError, to_number
+
+WORKOUT_TYPES = ("Strength", "Hypertrophy", "Conditioning", "Cardio", "Mixed", "Mobility")
 
 PROGRAMS = {
     "FL": {
@@ -124,3 +127,23 @@ def summarize_adherence(values):
     if not values:
         return 0, 0.0
     return len(values), round(sum(values) / len(values), 1)
+
+
+def calculate_bmi(height_cm, weight_kg):
+    """Return BMI (1 decimal) with its WHO category and a coaching risk note."""
+    height = to_number(height_cm, "height", positive=True, maximum=300)
+    weight = to_number(weight_kg, "weight", positive=True, maximum=500)
+    height_m = height / 100.0
+    bmi = round(weight / (height_m * height_m), 1)
+
+    if bmi < 18.5:
+        category, risk = "Underweight", "Potential nutrient deficiency, low energy."
+    elif bmi < 25:
+        category, risk = "Normal", "Low risk if active and strong."
+    elif bmi < 30:
+        category, risk = ("Overweight",
+                          "Moderate risk; focus on adherence and progressive activity.")
+    else:
+        category, risk = ("Obese",
+                          "Higher risk; prioritize fat loss, consistency, and supervision.")
+    return {"bmi": bmi, "category": category, "risk": risk}

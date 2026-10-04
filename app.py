@@ -12,7 +12,7 @@ import models
 from models import ConflictError, NotFoundError
 from validators import ValidationError
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 
 
 def create_app(test_config=None):

@@ -74,6 +74,11 @@
         <tr><td>GET / POST</td><td><code>/api/clients</code></td><td>List or create clients</td></tr>
         <tr><td>GET / PATCH / DELETE</td><td><code>/api/clients/&lt;name&gt;</code></td><td>Read, update or delete a client</td></tr>
         <tr><td>GET / POST</td><td><code>/api/clients/&lt;name&gt;/progress</code></td><td>Weekly adherence log</td></tr>
+        <tr><td>GET / POST</td><td><code>/api/clients/&lt;name&gt;/workouts</code></td><td>Workout sessions with exercises</td></tr>
+        <tr><td>GET / POST</td><td><code>/api/clients/&lt;name&gt;/metrics</code></td><td>Body metrics (weight, waist, body fat)</td></tr>
+        <tr><td>GET</td><td><code>/api/clients/&lt;name&gt;/summary</code></td><td>Profile, goals, progress and BMI</td></tr>
+        <tr><td>GET</td><td><code>/api/clients/&lt;name&gt;/bmi</code></td><td>Client BMI and risk category</td></tr>
+        <tr><td>POST</td><td><code>/api/bmi</code></td><td>Calculate BMI from height and weight</td></tr>
         <tr><td>GET</td><td><code>/api/export/clients.csv</code></td><td>Export clients as CSV</td></tr>
       </tbody>
     </table>

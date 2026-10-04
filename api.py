@@ -2,6 +2,7 @@
 
 import csv
 import io
+from datetime import date
 
 from flask import Blueprint, Response, abort, jsonify, request
 
@@ -152,3 +153,137 @@ def get_progress(name):
     weeks, average = fitness.summarize_adherence(e["adherence"] for e in entries)
     return jsonify(client=client["name"], weeks_logged=weeks,
                    average_adherence=average, entries=entries)
+
+
+# ---------- BMI ----------
+
+@bp.post("/bmi")
+def bmi():
+    data = get_payload()
+    return jsonify(fitness.calculate_bmi(require_number(data, "height"),
+                                         require_number(data, "weight")))
+
+
+@bp.get("/clients/<name>/bmi")
+def client_bmi(name):
+    client = models.get_client(name)
+    if not client["height"] or not client["weight"]:
+        raise ValidationError(f"Client '{client['name']}' needs height and weight for BMI")
+    return jsonify(client=client["name"],
+                   **fitness.calculate_bmi(client["height"], client["weight"]))
+
+
+# ---------- WORKOUTS ----------
+
+def parse_exercises(raw):
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise ValidationError("'exercises' must be a list")
+    exercises = []
+    for index, item in enumerate(raw):
+        if not isinstance(item, dict):
+            raise ValidationError(f"exercises[{index}] must be an object")
+        try:
+            exercises.append({
+                "name": require_text(item, "name"),
+                "sets": require_number(item, "sets", integer=True, minimum=1, maximum=20),
+                "reps": require_number(item, "reps", integer=True, minimum=1, maximum=100),
+                "weight": optional_number(item, "weight", minimum=0, maximum=1000) or 0.0,
+            })
+        except ValidationError as error:
+            raise ValidationError(f"exercises[{index}]: {error}") from None
+    return exercises
+
+
+@bp.post("/clients/<name>/workouts")
+def add_workout(name):
+    client = models.get_client(name)
+    data = get_payload()
+    workout_type = require_text(data, "workout_type")
+    matches = [t for t in fitness.WORKOUT_TYPES if t.lower() == workout_type.lower()]
+    if not matches:
+        raise ValidationError(
+            "'workout_type' must be one of: " + ", ".join(fitness.WORKOUT_TYPES))
+    workout = {
+        "date": optional_date(data, "date") or date.today().isoformat(),
+        "workout_type": matches[0],
+        "duration_min": optional_number(data, "duration_min", integer=True,
+                                        minimum=1, maximum=600) or 60,
+        "notes": optional_text(data, "notes"),
+    }
+    exercises = parse_exercises(data.get("exercises"))
+    return jsonify(models.add_workout(client["id"], workout, exercises)), 201
+
+
+@bp.get("/clients/<name>/workouts")
+def list_workouts(name):
+    client = models.get_client(name)
+    return jsonify(client=client["name"], workouts=models.list_workouts(client["id"]))
+
+
+# ---------- BODY METRICS ----------
+
+@bp.post("/clients/<name>/metrics")
+def add_metric(name):
+    client = models.get_client(name)
+    data = get_payload()
+    metric = {
+        "date": optional_date(data, "date") or date.today().isoformat(),
+        "weight": optional_number(data, "weight", positive=True, maximum=500),
+        "waist": optional_number(data, "waist", positive=True, maximum=300),
+        "bodyfat": optional_number(data, "bodyfat", minimum=1, maximum=75),
+    }
+    if all(metric[key] is None for key in ("weight", "waist", "bodyfat")):
+        raise ValidationError("Provide at least one of 'weight', 'waist' or 'bodyfat'")
+    entry = models.add_metric(client["id"], metric)
+    if metric["weight"] is not None:
+        # Keep the profile weight (and calorie target) in line with the latest weigh-in.
+        models.update_client(client["name"], {
+            "weight": metric["weight"],
+            "calories": compute_calories(metric["weight"], client["program"]),
+        })
+    return jsonify(entry), 201
+
+
+@bp.get("/clients/<name>/metrics")
+def list_metrics(name):
+    client = models.get_client(name)
+    return jsonify(client=client["name"], metrics=models.list_metrics(client["id"]))
+
+
+# ---------- CLIENT SUMMARY ----------
+
+@bp.get("/clients/<name>/summary")
+def client_summary(name):
+    client = models.get_client(name)
+    program = fitness.get_program(client["program"]) if client["program"] else None
+    weeks, average = fitness.summarize_adherence(
+        e["adherence"] for e in models.list_progress(client["id"]))
+    metrics = models.list_metrics(client["id"])
+
+    bmi = None
+    if client["height"] and client["weight"]:
+        bmi = fitness.calculate_bmi(client["height"], client["weight"])
+
+    weight_to_target = None
+    if client["weight"] and client["target_weight"]:
+        weight_to_target = round(client["weight"] - client["target_weight"], 1)
+
+    adherence_on_track = None
+    if client["target_adherence"] is not None and weeks:
+        adherence_on_track = average >= client["target_adherence"]
+
+    return jsonify(
+        profile=client,
+        program=None if program is None else {
+            key: program[key] for key in ("code", "name", "focus", "description")},
+        goals={"target_weight": client["target_weight"],
+               "target_adherence": client["target_adherence"],
+               "weight_to_target": weight_to_target,
+               "adherence_on_track": adherence_on_track},
+        progress={"weeks_logged": weeks, "average_adherence": average},
+        workouts_logged=len(models.list_workouts(client["id"])),
+        last_metrics=metrics[-1] if metrics else None,
+        bmi=bmi,
+    )

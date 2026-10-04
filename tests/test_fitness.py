@@ -71,3 +71,30 @@ class TestProgressHelpers:
 
     def test_summarize_adherence_empty(self):
         assert fitness.summarize_adherence([]) == (0, 0.0)
+
+
+class TestBmi:
+    @pytest.mark.parametrize("height, weight, bmi, category", [
+        (175, 50, 16.3, "Underweight"),
+        (175, 70, 22.9, "Normal"),
+        (175, 85, 27.8, "Overweight"),
+        (175, 100, 32.7, "Obese"),
+    ])
+    def test_categories(self, height, weight, bmi, category):
+        result = fitness.calculate_bmi(height, weight)
+        assert result["bmi"] == bmi
+        assert result["category"] == category
+        assert result["risk"]
+
+    @pytest.mark.parametrize("height, weight, category", [
+        (100, 18.5, "Normal"),      # BMI exactly 18.5
+        (100, 25, "Overweight"),    # BMI exactly 25
+        (100, 30, "Obese"),         # BMI exactly 30
+    ])
+    def test_category_boundaries(self, height, weight, category):
+        assert fitness.calculate_bmi(height, weight)["category"] == category
+
+    @pytest.mark.parametrize("height, weight", [(0, 70), (175, 0), ("x", 70), (175, None)])
+    def test_invalid_input(self, height, weight):
+        with pytest.raises(ValidationError):
+            fitness.calculate_bmi(height, weight)
