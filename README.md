@@ -26,8 +26,9 @@ as a modular web service and ships it through a full DevOps workflow:
 7. [CI/CD Integration Overview](#cicd-integration-overview)
 8. [Jenkins BUILD Server](#jenkins-build-server)
 9. [GitHub Actions Pipeline](#github-actions-pipeline)
-10. [Version Control Strategy](#version-control-strategy)
-11. [Troubleshooting](#troubleshooting)
+10. [Quality Gate Demonstration](#quality-gate-demonstration)
+11. [Version Control Strategy](#version-control-strategy)
+12. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -370,6 +371,29 @@ It has three jobs that depend on each other:
 
 The workflow has read-only repository permissions. A newer push to the same branch
 cancels the run that is still in progress.
+
+---
+
+## Quality Gate Demonstration
+
+To prove the pipelines really stop bad changes, the branch
+[`demo/quality-gate`](https://github.com/FreyaModi/ACEest-Fitness-CI-CD/tree/demo/quality-gate)
+contains **deliberately broken commits**, each labelled `INTENTIONAL FAILURE`, followed by
+the fixes. Every commit was pushed on its own, so each one got its own GitHub Actions run
+(on the push and on [pull request #1](https://github.com/FreyaModi/ACEest-Fitness-CI-CD/pull/1))
+and its own build in the Jenkins job **ACEest Fitness - Quality Gate Demo**, which builds
+that branch.
+
+| Push | Change | Jenkins result | GitHub Actions result |
+|------|--------|----------------|-----------------------|
+| 1 | Unused import (flake8 `F401`) | ❌ Fails at **Lint** | ❌ Fails at **Build & Lint** |
+| 2 | Fat Loss calorie factor changed from 22 to 20 | ❌ Lint passes, fails at **Unit Tests** (6 tests) | ❌ Fails at **Automated Testing (in container)** |
+| 3 | Dockerfile copies a file that doesn't exist | ❌ Tests pass, fails at **Docker Build** | ❌ Fails at **Docker Image Assembly** |
+| 4 | Revert the last breakage | ✅ Success | ✅ Success |
+| 5 | This README section | ✅ Success | ✅ Success |
+
+Each failure is caught by a later stage than the one before, which shows that every
+stage is a real gate. Each breakage is reverted by the next commit, so `main` is never broken.
 
 ---
 
