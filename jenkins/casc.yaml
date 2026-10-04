@@ -20,27 +20,38 @@ unclassified:
 
 jobs:
   - script: |
-      pipelineJob('aceest-fitness-build') {
-        displayName('ACEest Fitness - BUILD')
-        description('Pulls the latest code from GitHub (main) and runs a clean build: lint, unit tests, Docker image build and containerised tests. Defined by the Jenkinsfile in the repository.')
-        logRotator { numToKeep(20) }
-        properties {
-          pipelineTriggers {
-            triggers {
-              pollSCM { scmpoll_spec('H/2 * * * *') }
-            }
-          }
-        }
-        definition {
-          cpsScm {
-            scm {
-              git {
-                remote { url('${GITHUB_REPO_URL}') }
-                branch('*/${GITHUB_BRANCH:-main}')
+      [
+        [name: 'aceest-fitness-build',
+         title: 'ACEest Fitness - BUILD',
+         branch: '${GITHUB_BRANCH:-main}',
+         description: 'Pulls the latest code from GitHub (main) and runs a clean build: lint, unit tests, Docker image build and containerised tests. Defined by the Jenkinsfile in the repository.'],
+        [name: 'aceest-fitness-quality-gate-demo',
+         title: 'ACEest Fitness - Quality Gate Demo',
+         branch: 'demo/quality-gate',
+         description: 'Builds the demo/quality-gate branch, which contains deliberately broken commits (lint error, failing unit test, broken Dockerfile) to show that each pipeline stage stops a bad change, followed by the fixes.'],
+      ].each { job ->
+        pipelineJob(job.name) {
+          displayName(job.title)
+          description(job.description)
+          logRotator { numToKeep(20) }
+          properties {
+            pipelineTriggers {
+              triggers {
+                pollSCM { scmpoll_spec('H/2 * * * *') }
               }
             }
-            scriptPath('Jenkinsfile')
-            lightweight(true)
+          }
+          definition {
+            cpsScm {
+              scm {
+                git {
+                  remote { url('${GITHUB_REPO_URL}') }
+                  branch('*/' + job.branch)
+                }
+              }
+              scriptPath('Jenkinsfile')
+              lightweight(true)
+            }
           }
         }
       }
