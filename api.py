@@ -287,3 +287,48 @@ def client_summary(name):
         last_metrics=metrics[-1] if metrics else None,
         bmi=bmi,
     )
+
+
+# ---------- PROGRAM GENERATOR ----------
+
+def parse_seed(data):
+    return optional_number(data, "seed", integer=True)
+
+
+@bp.post("/programs/generate")
+def generate_program():
+    data = get_payload()
+    return jsonify(fitness.generate_program(data.get("experience"),
+                                            program=data.get("program"),
+                                            seed=parse_seed(data)))
+
+
+@bp.post("/clients/<name>/generate-program")
+def generate_client_program(name):
+    client = models.get_client(name)
+    data = get_payload()
+    plan = fitness.generate_program(data.get("experience"), program=client["program"],
+                                    seed=parse_seed(data))
+    return jsonify(client=client["name"], **plan)
+
+
+# ---------- MEMBERSHIP ----------
+
+@bp.get("/clients/<name>/membership")
+def membership(name):
+    client = models.get_client(name)
+    return jsonify(client=client["name"],
+                   **fitness.membership_info(client["membership_status"],
+                                             client["membership_end"]))
+
+
+@bp.post("/clients/<name>/membership/renew")
+def renew_membership(name):
+    client = models.get_client(name)
+    data = get_payload()
+    new_end = fitness.renew_membership(client["membership_end"], data.get("months"))
+    client = models.update_client(client["name"], {"membership_status": "Active",
+                                                   "membership_end": new_end})
+    return jsonify(client=client["name"],
+                   **fitness.membership_info(client["membership_status"],
+                                             client["membership_end"]))
