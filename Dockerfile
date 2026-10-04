@@ -43,8 +43,6 @@ COPY --from=builder /opt/venv /opt/venv
 # Application files stay owned by root, so the app user cannot modify them.
 COPY *.py schema.sql ./
 COPY templates/ templates/
-# INTENTIONAL error for the quality-gate demo: this file does not exist.
-COPY gym-config.yaml ./
 
 ENV PATH="/opt/venv/bin:$PATH" \
     ACEEST_DATABASE=/data/aceest_fitness.db
