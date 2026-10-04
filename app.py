@@ -6,19 +6,27 @@ from flask import Flask, jsonify, render_template
 from werkzeug.exceptions import HTTPException
 
 import api
+import database
 import fitness
+import models
+from models import ConflictError, NotFoundError
 from validators import ValidationError
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 
 
 def create_app(test_config=None):
     """Create and configure the Flask application."""
     app = Flask(__name__)
-    app.config.from_mapping(APP_VERSION=__version__)
+    app.config.from_mapping(
+        APP_VERSION=__version__,
+        DATABASE=os.environ.get(
+            "ACEEST_DATABASE", os.path.join(app.instance_path, "aceest_fitness.db")),
+    )
     if test_config:
         app.config.update(test_config)
 
+    database.init_app(app)
     app.register_blueprint(api.bp)
     register_error_handlers(app)
 
@@ -26,6 +34,7 @@ def create_app(test_config=None):
     def index():
         return render_template("index.html",
                                programs=fitness.list_programs(),
+                               clients=models.list_clients(),
                                version=app.config["APP_VERSION"])
 
     @app.get("/health")
@@ -42,6 +51,14 @@ def register_error_handlers(app):
     @app.errorhandler(ValidationError)
     def handle_validation_error(error):
         return jsonify(error=str(error)), 400
+
+    @app.errorhandler(NotFoundError)
+    def handle_not_found(error):
+        return jsonify(error=str(error)), 404
+
+    @app.errorhandler(ConflictError)
+    def handle_conflict(error):
+        return jsonify(error=str(error)), 409
 
     @app.errorhandler(HTTPException)
     def handle_http_error(error):

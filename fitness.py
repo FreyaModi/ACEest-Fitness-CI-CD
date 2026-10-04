@@ -1,10 +1,11 @@
 """Core fitness domain logic for ACEest, independent of Flask.
 
 Program data and calorie factors come from the ACEest desktop versions
-(Aceestver-1.0 to Aceestver-1.1).
+(Aceestver-1.0 to Aceestver-1.1); progress tracking from Aceestver-2.x.
 """
 
 import copy
+from datetime import date
 
 from validators import ValidationError, to_number
 
@@ -109,3 +110,17 @@ def calculate_calories(weight_kg, program):
     weight = to_number(weight_kg, "weight", positive=True, maximum=500)
     code = resolve_program_code(program)
     return int(weight * PROGRAMS[code]["calorie_factor"])
+
+
+def current_week_label(today=None):
+    """Return the week label used for progress logs, e.g. "Week 09 - 2026"."""
+    today = today or date.today()
+    return today.strftime("Week %U - %Y")
+
+
+def summarize_adherence(values):
+    """Return (weeks_logged, average_adherence rounded to 1 decimal)."""
+    values = list(values)
+    if not values:
+        return 0, 0.0
+    return len(values), round(sum(values) / len(values), 1)
