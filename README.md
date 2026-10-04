@@ -341,6 +341,21 @@ docker compose down -v           # stop and delete all Jenkins data
 > builds only when there is a new commit. If Jenkins is hosted publicly, add a GitHub
 > webhook (`/github-webhook/`) to trigger builds instantly.
 
+### Running on the university lab VM
+
+The BITS lab VM (Rocky Linux 9.5) comes with Jenkins 2.568.1 installed as a system
+service on port 8080. These steps were needed to run this pipeline there:
+
+1. **Python 3.12.** The VM's default `python3` is 3.9, which can't install the pinned
+   dependencies. Install 3.12 with `sudo dnf install -y python3.12 python3.12-pip`. The
+   Jenkinsfile automatically uses the newest Python it finds (3.13 → 3.12 → 3.11 → `python3`).
+2. **Docker access for Jenkins.** Run `sudo usermod -aG docker jenkins && sudo systemctl restart jenkins`.
+3. **Jobs.** Create pipeline jobs `aceest-fitness-build` (branch `*/main`) and
+   `aceest-fitness-quality-gate-demo-vm` (branch `*/demo/quality-gate-vm`). Each uses
+   *Pipeline script from SCM* → Git → this repository, script path `Jenkinsfile`, with
+   *Poll SCM* set to `H/2 * * * *`.
+4. **Optional:** install the *Pipeline: Stage View* plugin to get the stage-by-stage view.
+
 ### Pipeline stages (`Jenkinsfile`)
 
 | Stage | What happens |
@@ -394,6 +409,15 @@ that branch.
 
 Each failure is caught by a later stage than the one before, which shows that every
 stage is a real gate. Each breakage is reverted by the next commit, so `main` is never broken.
+
+### Replay on the university lab VM
+
+The same sequence was replayed on the **BITS lab VM's Jenkins** using the branch
+[`demo/quality-gate-vm`](https://github.com/FreyaModi/ACEest-Fitness-CI-CD/tree/demo/quality-gate-vm)
+and [pull request #2](https://github.com/FreyaModi/ACEest-Fitness-CI-CD/pull/2). The Jenkins
+job is **ACEest Fitness - Quality Gate Demo (VM)**, and the results match the table above:
+Lint ❌ → Unit Tests ❌ → Docker Build ❌ → ✅ → ✅. Build #1 of that job failed at checkout
+because the job was created before the branch had been pushed, so the demo starts at build #2.
 
 ---
 
