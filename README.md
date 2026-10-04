@@ -126,7 +126,7 @@ Quick check:
 
 ```bash
 curl http://localhost:5000/health
-# {"service":"aceest-fitness","status":"ok","version":"3.0.0"}
+# {"service":"aceest-fitness","status":"ok","version":"3.1.0"}
 ```
 
 ---
