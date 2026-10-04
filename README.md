@@ -1,6 +1,6 @@
 # ACEest Fitness & Gym — Flask App with Automated CI/CD
 
-[![CI/CD Pipeline](https://github.com/__GITHUB_REPO__/actions/workflows/main.yml/badge.svg)](https://github.com/__GITHUB_REPO__/actions/workflows/main.yml)
+[![CI/CD Pipeline](https://github.com/FreyaModi/ACEest-Fitness-CI-CD/actions/workflows/main.yml/badge.svg)](https://github.com/FreyaModi/ACEest-Fitness-CI-CD/actions/workflows/main.yml)
 ![Python](https://img.shields.io/badge/python-3.13-blue)
 ![Flask](https://img.shields.io/badge/flask-3.1-lightgrey)
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
@@ -92,8 +92,8 @@ the container steps.
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/__GITHUB_REPO__.git
-cd __REPO_NAME__
+git clone https://github.com/FreyaModi/ACEest-Fitness-CI-CD.git
+cd ACEest-Fitness-CI-CD
 
 # 2. Create and activate a virtual environment
 python3 -m venv .venv
