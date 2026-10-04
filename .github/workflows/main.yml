@@ -1,0 +1,134 @@
+# CI/CD pipeline for ACEest Fitness & Gym.
+# Runs on every push and pull request:
+#   1. Build & Lint            - install dependencies, byte-compile, flake8
+#   2. Docker Image Assembly   - build the test and runtime images
+#   3. Automated Testing       - run Pytest inside the container, smoke-test the runtime image
+name: CI/CD Pipeline
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE_NAME: aceest-fitness
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  build-lint:
+    name: Build & Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Compile sources (syntax check)
+        run: python -m compileall -q -x '/\.(git|venv)/' .
+
+      - name: Lint with flake8
+        run: flake8 . --count --show-source --statistics
+
+      - name: Verify the application starts
+        run: |
+          ACEEST_DATABASE="$RUNNER_TEMP/ci.db" python -c \
+            "from app import create_app; app = create_app(); print('Loaded', app.name, app.config['APP_VERSION'])"
+
+  docker-build:
+    name: Docker Image Assembly
+    needs: build-lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Build test image
+        run: docker build --target test -t "$IMAGE_NAME:test" .
+
+      - name: Build runtime image
+        run: docker build -t "$IMAGE_NAME:latest" -t "$IMAGE_NAME:${GITHUB_SHA::7}" .
+
+      - name: Show image sizes
+        run: docker images "$IMAGE_NAME"
+
+      - name: Export images
+        run: docker save "$IMAGE_NAME:test" "$IMAGE_NAME:latest" | gzip > images.tar.gz
+
+      - name: Upload images for the test job
+        uses: actions/upload-artifact@v7
+        with:
+          name: docker-images
+          path: images.tar.gz
+          retention-days: 1
+
+  container-tests:
+    name: Automated Testing (in container)
+    needs: docker-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download images
+        uses: actions/download-artifact@v8
+        with:
+          name: docker-images
+
+      - name: Load images
+        run: gunzip -c images.tar.gz | docker load
+
+      - name: Run Pytest inside the container
+        run: |
+          mkdir -p reports
+          docker run --rm -v "$PWD/reports:/app/reports" "$IMAGE_NAME:test" \
+            pytest -v --cov --cov-report=term-missing \
+                   --cov-report=xml:reports/coverage.xml --junitxml=reports/junit.xml
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: reports/
+          if-no-files-found: warn
+
+      - name: Smoke-test the runtime container
+        run: |
+          docker run -d --name aceest -p 5000:5000 "$IMAGE_NAME:latest"
+          for i in $(seq 1 30); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' aceest)
+            [ "$status" = "healthy" ] && break
+            sleep 2
+          done
+          echo "Container health: $status"
+          test "$status" = "healthy"
+          curl -fsS http://localhost:5000/health
+          curl -fsS http://localhost:5000/api/programs > /dev/null
+          curl -fsS -X POST http://localhost:5000/api/calories \
+               -H 'Content-Type: application/json' -d '{"weight": 70, "program": "FL"}'
+
+      - name: Show container logs
+        if: always()
+        run: docker logs aceest || true
+
+      - name: Clean up
+        if: always()
+        run: docker rm -f aceest || true
