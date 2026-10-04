@@ -1,0 +1,51 @@
+# Local Jenkins CI server for ACEest Fitness & Gym.
+#   cp .env.example .env   # then edit the values
+#   docker compose up -d --build
+# Jenkins UI: http://localhost:8080
+name: aceest-jenkins
+
+services:
+  # Docker-in-Docker daemon used by pipeline stages that build and run images,
+  # so builds never touch the host's Docker engine.
+  docker:
+    image: docker:29.8.2-dind
+    container_name: aceest-jenkins-docker
+    privileged: true
+    restart: unless-stopped
+    environment:
+      DOCKER_TLS_CERTDIR: /certs
+    volumes:
+      - jenkins-docker-certs:/certs/client
+      - jenkins-data:/var/jenkins_home
+      - jenkins-docker-cache:/var/lib/docker
+    networks:
+      - jenkins
+
+  jenkins:
+    build: .
+    image: aceest-jenkins:2.580.1
+    container_name: aceest-jenkins
+    restart: unless-stopped
+    depends_on:
+      - docker
+    env_file: .env
+    environment:
+      DOCKER_HOST: tcp://docker:2376
+      DOCKER_CERT_PATH: /certs/client
+      DOCKER_TLS_VERIFY: "1"
+    ports:
+      - "${JENKINS_PORT:-8080}:8080"
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - jenkins-docker-certs:/certs/client:ro
+      - ./casc.yaml:/var/jenkins_conf/casc.yaml:ro
+    networks:
+      - jenkins
+
+volumes:
+  jenkins-data:
+  jenkins-docker-certs:
+  jenkins-docker-cache:
+
+networks:
+  jenkins:

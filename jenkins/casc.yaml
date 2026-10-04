@@ -1,0 +1,46 @@
+# Jenkins Configuration as Code (JCasC) for the ACEest CI server.
+# Values in ${...} come from environment variables (see .env.example).
+jenkins:
+  systemMessage: "ACEest Fitness & Gym CI server (configured as code)"
+  numExecutors: 2
+  mode: NORMAL
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "${JENKINS_ADMIN_ID}"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+unclassified:
+  location:
+    url: "${JENKINS_URL:-http://localhost:8080/}"
+
+jobs:
+  - script: |
+      pipelineJob('aceest-fitness-build') {
+        displayName('ACEest Fitness - BUILD')
+        description('Pulls the latest code from GitHub (main) and runs a clean build: lint, unit tests, Docker image build and containerised tests. Defined by the Jenkinsfile in the repository.')
+        logRotator { numToKeep(20) }
+        properties {
+          pipelineTriggers {
+            triggers {
+              pollSCM { scmpoll_spec('H/2 * * * *') }
+            }
+          }
+        }
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('${GITHUB_REPO_URL}') }
+                branch('*/${GITHUB_BRANCH:-main}')
+              }
+            }
+            scriptPath('Jenkinsfile')
+            lightweight(true)
+          }
+        }
+      }
