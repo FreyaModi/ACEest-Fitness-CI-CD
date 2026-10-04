@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Test / coverage artefacts
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+reports/
+
+# Local runtime data
+*.db
+instance/
+
+# Secrets / local env
+.env
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
