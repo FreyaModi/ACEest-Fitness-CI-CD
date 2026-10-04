@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ACEest Fitness & Gym</title>
+  <style>
+    :root { --gold: #d4af37; --bg: #1a1a1a; --panel: #262626; --text: #f2f2f2; --muted: #b3b3b3; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+    header { background: var(--gold); color: #000; padding: 20px 16px; text-align: center; }
+    header h1 { margin: 0; font-size: 1.8rem; letter-spacing: .04em; }
+    header p { margin: 4px 0 0; font-size: .9rem; }
+    main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+    h2 { color: var(--gold); }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .card { background: var(--panel); border-radius: 8px; padding: 16px; border-top: 4px solid var(--accent); }
+    .card h3 { margin: 0 0 4px; color: var(--accent); }
+    .card .meta { color: var(--muted); font-size: .85rem; margin-bottom: 8px; }
+    .card ul { margin: 4px 0 12px; padding-left: 18px; }
+    table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 8px; overflow: hidden; }
+    th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #333; font-size: .9rem; }
+    th { color: var(--gold); }
+    code { color: var(--gold); }
+    footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ACEest FUNCTIONAL FITNESS</h1>
+    <p>Fitness &amp; Gym Management &middot; v{{ version }}</p>
+  </header>
+  <main>
+    <h2>Training Programs</h2>
+    <div class="grid">
+      {% for program in programs %}
+      <section class="card" style="--accent: {{ program.color }}">
+        <h3>{{ program.name }}</h3>
+        <div class="meta">Focus: {{ program.focus }} &middot; Calorie factor: {{ program.calorie_factor }} kcal/kg</div>
+        <p>{{ program.description }}</p>
+        <strong>Weekly Workout</strong>
+        <ul>{% for item in program.workout %}<li>{{ item }}</li>{% endfor %}</ul>
+        <strong>Nutrition Plan</strong>
+        <ul>{% for item in program.diet %}<li>{{ item }}</li>{% endfor %}</ul>
+      </section>
+      {% endfor %}
+    </div>
+
+    <h2>API Endpoints</h2>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>GET</td><td><code>/health</code></td><td>Service health check</td></tr>
+        <tr><td>GET</td><td><code>/api/programs</code></td><td>List training programs</td></tr>
+        <tr><td>GET</td><td><code>/api/programs/&lt;code&gt;</code></td><td>Program details (FL, MG, BG)</td></tr>
+        <tr><td>POST</td><td><code>/api/calories</code></td><td>Estimate daily calories</td></tr>
+      </tbody>
+    </table>
+  </main>
+  <footer>ACEest Fitness &amp; Gym</footer>
+</body>
+</html>
