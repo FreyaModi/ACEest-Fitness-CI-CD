@@ -36,8 +36,11 @@ pipeline {
         stage('Setup Environment') {
             steps {
                 sh '''
-                    python3 --version
-                    python3 -m venv .venv
+                    # Use the newest Python 3 on the agent (some hosts ship an old
+                    # default python3, e.g. 3.9 on Rocky Linux 9).
+                    PY=$(command -v python3.13 || command -v python3.12 || command -v python3.11 || command -v python3)
+                    "$PY" --version
+                    "$PY" -m venv .venv
                     .venv/bin/pip install --quiet --upgrade pip
                     .venv/bin/pip install --quiet -r requirements-dev.txt
                 '''
