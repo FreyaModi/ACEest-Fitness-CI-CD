@@ -20,8 +20,10 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'aceest-fitness'
-        IMAGE_TAG = "${env.BUILD_NUMBER}"
-        SMOKE_CONTAINER = "aceest-smoke-${env.BUILD_NUMBER}"
+        // Include the job name so builds of different jobs running at the same
+        // time on one Docker host never share an image tag or container name.
+        IMAGE_TAG = "${env.JOB_NAME.replaceAll('[^A-Za-z0-9_.-]', '-')}-${env.BUILD_NUMBER}"
+        SMOKE_CONTAINER = "aceest-smoke-${env.JOB_NAME.replaceAll('[^A-Za-z0-9_.-]', '-')}-${env.BUILD_NUMBER}"
     }
 
     stages {
