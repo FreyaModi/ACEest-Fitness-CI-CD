@@ -73,6 +73,33 @@ pipeline {
             }
         }
 
+        // Configure a Jenkins SonarQube installation named "SonarQube" and
+        // install the SonarScanner tool as "SonarScanner" to enable this gate.
+        stage('SonarQube Analysis') {
+            when {
+                environment name: 'SONARQUBE_ENABLED', value: 'true'
+            }
+            steps {
+                script {
+                    def scannerHome = tool 'SonarScanner'
+                    withSonarQubeEnv('SonarQube') {
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Quality Gate') {
+            when {
+                environment name: 'SONARQUBE_ENABLED', value: 'true'
+            }
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
         stage('Docker Build') {
             steps {
                 sh '''

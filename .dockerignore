@@ -23,4 +23,7 @@ Dockerfile
 Jenkinsfile
 jenkins
 docs
+versions
+k8s
+sonar-project.properties
 *.md
