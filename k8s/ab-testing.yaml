@@ -1,0 +1,63 @@
+# Requires the NGINX Ingress Controller and an existing stable aceest-fitness
+# Service/Ingress for host aceest.local. Requests with the experiment header
+# go to variant B; all other requests keep using the stable service.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceest-variant-b
+  namespace: aceest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aceest-fitness
+      variant: b
+  template:
+    metadata:
+      labels:
+        app: aceest-fitness
+        variant: b
+    spec:
+      containers:
+        - name: app
+          image: DOCKERHUB_USERNAME/aceest-fitness:VARIANT_B_VERSION
+          ports:
+            - containerPort: 5000
+          readinessProbe:
+            httpGet: {path: /health, port: 5000}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-variant-b
+  namespace: aceest
+spec:
+  selector:
+    app: aceest-fitness
+    variant: b
+  ports:
+    - port: 80
+      targetPort: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aceest-variant-b
+  namespace: aceest
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-by-header: "X-Aceest-Experiment"
+    nginx.ingress.kubernetes.io/canary-by-header-value: "variant-b"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: aceest.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: aceest-variant-b
+                port:
+                  number: 80

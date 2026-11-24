@@ -1,0 +1,66 @@
+# Apply both deployments, then switch the Service selector from blue to green
+# only after the green version passes its smoke checks.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceest-blue
+  namespace: aceest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aceest-fitness
+      slot: blue
+  template:
+    metadata:
+      labels:
+        app: aceest-fitness
+        slot: blue
+        version: stable
+    spec:
+      containers:
+        - name: app
+          image: DOCKERHUB_USERNAME/aceest-fitness:BLUE_VERSION
+          ports:
+            - containerPort: 5000
+          readinessProbe:
+            httpGet: {path: /health, port: 5000}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceest-green
+  namespace: aceest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aceest-fitness
+      slot: green
+  template:
+    metadata:
+      labels:
+        app: aceest-fitness
+        slot: green
+        version: candidate
+    spec:
+      containers:
+        - name: app
+          image: DOCKERHUB_USERNAME/aceest-fitness:GREEN_VERSION
+          ports:
+            - containerPort: 5000
+          readinessProbe:
+            httpGet: {path: /health, port: 5000}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-fitness
+  namespace: aceest
+spec:
+  selector:
+    app: aceest-fitness
+    slot: blue
+  ports:
+    - port: 80
+      targetPort: 5000

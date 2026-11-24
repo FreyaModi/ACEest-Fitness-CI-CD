@@ -1,14 +1,17 @@
 # ACEest Fitness & Gym — Flask App with Automated CI/CD
 
-[![CI/CD Pipeline](https://github.com/FreyaModi/ACEest-Fitness-CI-CD/actions/workflows/main.yml/badge.svg)](https://github.com/FreyaModi/ACEest-Fitness-CI-CD/actions/workflows/main.yml)
 ![Python](https://img.shields.io/badge/python-3.13-blue)
 ![Flask](https://img.shields.io/badge/flask-3.1-lightgrey)
-![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+> **Assignment 2 working copy:** this folder contains local application, CI,
+> container, SonarQube, and Kubernetes configuration. The screenshots below
+> came with the supplied starter project and are reference material, not
+> evidence of runs from this working copy. Check current CI and deployment
+> status in the connected services.
 
 ACEest Fitness & Gym is a Flask web application and REST API for managing a gym's
 clients, training programs, workouts, body metrics and memberships. It started as a
 Tkinter desktop app (`Aceestver-1.0` to `Aceestver-3.2.4`). This repository rebuilds it
-as a modular web service and ships it through a full DevOps workflow:
+as a modular web service with configuration for a DevOps workflow:
 
 **Git/GitHub** (version control) → **Pytest** (validation) → **Docker** (containerization)
 → **Jenkins** (BUILD quality gate) → **GitHub Actions** (CI/CD on every push and pull request).
@@ -30,6 +33,7 @@ as a modular web service and ships it through a full DevOps workflow:
 11. [Pipeline Evidence (Screenshots)](#pipeline-evidence-screenshots)
 12. [Version Control Strategy](#version-control-strategy)
 13. [Troubleshooting](#troubleshooting)
+14. [Assignment 2 Local Configuration](#assignment-2-local-configuration)
 
 ---
 
@@ -491,8 +495,22 @@ git tag -n                        # list the release tags
 
 | Problem | Fix |
 |---------|-----|
-| `Address already in use` on port 5000 (macOS) | AirPlay Receiver uses port 5000. Run `PORT=5001 python app.py` or map another port: `docker run -p 5001:5000 ...` |
-| `ModuleNotFoundError: flask` | Activate the virtualenv (`source .venv/bin/activate`) and run `pip install -r requirements-dev.txt` |
+| Address already in use on port 5000 (macOS) | AirPlay Receiver uses port 5000. Run `PORT=5001 python app.py` or map another port: `docker run -p 5001:5000 ...` |
+| ModuleNotFoundError: flask | Activate the virtualenv (`source .venv/bin/activate`) and run `pip install -r requirements-dev.txt` |
 | Jenkins port 8080 is busy | Set `JENKINS_PORT=8081` in `jenkins/.env` and run `docker compose up -d` again |
 | Jenkins build cannot reach Docker | Check that the sidecar is running: `docker compose ps` should show `aceest-jenkins-docker` |
 | Want a fresh database | Delete `instance/aceest_fitness.db`, or the `aceest-data` volume for Docker |
+
+## Assignment 2 Local Configuration
+
+- Original Assignment 1 source files are retained in `versions/assignment-1/`.
+- `sonar-project.properties` configures the project analysis. The Jenkinsfile
+  runs the analysis and blocks on the quality gate when `SONARQUBE_ENABLED=true`;
+  first configure a Jenkins SonarQube server named `SonarQube`, a scanner tool
+  named `SonarScanner`, the server webhook to Jenkins, and set the pipeline job
+  environment variable `SONARQUBE_ENABLED` to `true`.
+- `k8s/` contains the base service and ingress plus rolling, blue/green, canary,
+  A/B, and shadow strategy examples. See `k8s/README.md` for commands and
+  rollback steps.
+- The app currently uses SQLite. Strategy manifests are demonstrations only;
+  migrate to a shared database before production multi-version traffic.
